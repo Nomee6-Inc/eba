@@ -12,6 +12,30 @@ if (!isset($_SESSION['username'])) {
 
 include_once 'config.php';
 $result = mysqli_query($conn,"SELECT * FROM employee");
+
+$jsonitem = file_get_contents("./userdata.json");
+
+$objitems = json_decode($jsonitem);
+$findById = function($id) use ($objitems) {
+    foreach ($objitems as $about) {
+        if ($about->id == $id) return $about->about;
+    }
+};
+$findBycolor = function($id) use ($objitems) {
+    foreach ($objitems as $rolecolor) {
+        if ($rolecolor->id == $id) return $rolecolor->rolecolor;
+    }
+};
+$findByrole = function($id) use ($objitems) {
+    foreach ($objitems as $role) {
+        if ($role->id == $id) return $role->role;
+    }
+};
+$findBynote = function($id) use ($objitems) {
+    foreach ($objitems as $not) {
+        if ($not->id == $id) return $not->not;
+    }
+};
 ?>
 
 <!doctype html>
@@ -200,13 +224,9 @@ $result = mysqli_query($conn,"SELECT * FROM employee");
             <div class="container-xl">
                 <span class="avatar avatar-xl mb-3 avatar-rounded" style="background-image: url(./avatars/<?php echo $getprofilid; ?>.png)"></span>
                 <h3 class="m-0 mb-1"><?php echo $getprofilid; ?></h3>
-                <?php
-                if($getprofilid == "aliyasin") {
-                    echo "<span class=\"badge bg-green-lt\">Yönetici</span>";
-                } else {
-                    echo "<span class=\"badge bg-purple-lt\">Öğrenci</span>";
-                }
-                ?>
+                <span class="badge bg-<?php echo $findBycolor($getprofilid); ?>-lt"><?php echo $findByrole($getprofilid); ?></span>
+                <div class="card-body">
+                  </div>
             </div>
         </div>
         <?php 
@@ -219,6 +239,18 @@ $result = mysqli_query($conn,"SELECT * FROM employee");
         </div>";
         }
         ?>
+        <div class="page-body">
+            <div class="col-sm-6 col-lg-4">
+                <div class="card">
+                  <div class="card-body">
+                    <h3 class="card-title">Kullanıcı Hakkında</h3>
+                    <p><?php echo $findById($getprofilid); ?></p>
+                    <h3 class="card-title">Kullanıcı Not Ortalaması</h3>
+                    <p><?php echo $findBynote($getprofilid); ?></p>
+                  </div>
+              </div>
+            </div>       
+        </div>
         <footer class="footer footer-transparent d-print-none">
           <div class="container-xl">
             <div class="row text-center align-items-center flex-row-reverse">
