@@ -10,6 +10,7 @@ $result = mysqli_query($conn,"SELECT * FROM employee");
 
 
 if (isset($_POST['submit'])) {
+    $newaboutme = $_POST['about'];
 	$uploaddir = 'avatars/';
 	$uploadfile = $uploaddir . "$getusername.png";
 	if (move_uploaded_file($_FILES['ppupload']['tmp_name'], $uploadfile)) {
@@ -17,6 +18,19 @@ if (isset($_POST['submit'])) {
 	} else {
 		echo "Profil Fotoğrafı yüklenirken hata oluştu!";
 	};
+	
+	$datao = file_get_contents('./userdata.json');
+
+    $json_arro = json_decode($datao, true);
+
+    foreach ($json_arro as $keyo => $valueo) {
+        if ($valueo['id'] == "$getusername") {
+            $json_arro[$keyo]['about'] = $newaboutme;
+        }
+    }
+    file_put_contents('./userdata.json', json_encode($json_arro));
+
+	header("Refresh:0");
 };
 
 ?>
@@ -216,6 +230,10 @@ echo("
 									<div class="mb-3">
                             		<div class="form-label">Profil Fotoğrafı</div>
 										<input type="file" name="ppupload" id="ppupload" class="form-control">
+									</div>
+									<div class="mb-3">
+                            		<div class="form-label">Hakkımda</div>
+										<input type="text" name="about" id="about" class="form-control">
 									</div>
 									<div class="input-group">
 										<button name="submit" class="btn">Kaydet</button>
