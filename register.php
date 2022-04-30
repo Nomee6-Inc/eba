@@ -25,12 +25,34 @@ if (isset($_POST['submit'])) {
 					VALUES ('$tc', '$username', '$email', '$password')";
 			$result = mysqli_query($conn, $sql);
 			if ($result) {
-				echo "<script>alert('Kayıt İşlemi Başarılı.')</script>";
-				$tc = "";
-				$username = "";
-				$email = "";
-				$_POST['password'] = "";
-				$_POST['cpassword'] = "";
+				function fileWriteAppend(){
+		            $current_data = file_get_contents('userdata.json');
+		            $array_data = json_decode($current_data, true);
+		            $extra = array(
+			            'id'               =>     $_POST['username'],
+                        'role'          =>     "Öğrenci",
+			            'rolecolor'          =>     "purple",
+			            'not'          =>     "0",
+                        'about'          =>     "",
+		        );
+		        $array_data[] = $extra;
+		        $final_data = json_encode($array_data);
+		        return $final_data;
+            }
+            if(file_exists('userdata.json'))
+            {
+                $final_data=fileWriteAppend();
+                if(file_put_contents('userdata.json', $final_data))
+            {
+                $message = "success";
+            }
+        }
+        echo "<script>alert('Kayıt İşlemi Başarılı.')</script>";
+		$tc = "";
+		$username = "";
+		$email = "";
+	    $_POST['password'] = "";
+		$_POST['cpassword'] = "";
 			} else {
 				echo "<script>alert('Bir hata oluştu.')</script>";
 			}
