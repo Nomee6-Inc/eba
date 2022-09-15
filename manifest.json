@@ -1,0 +1,15 @@
+{
+  "name": "NOMEE6 Eğitim",
+  "short_name": "NOMEE6 EBA",
+  "start_url": "https://egitim.nomee6.xyz/index.php",
+  "display": "standalone",
+  "description": "NOMEE6 Eğitim ile öğrenciler çok daha iyi eğitim görüyorlar.",
+  "background_color": "#B12A34",
+  "theme_color": "#B12A34",
+  "orientation": "portrait-primary",
+  "icons": [{
+    "src": "https://nomee6.xyz/assets/pp.png",
+    "sizes": "512x512",
+    "type": "image/png"
+  }]
+}
