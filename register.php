@@ -1,69 +1,58 @@
 <?php 
-
 include 'config.php';
-
-error_reporting(0);
-
-session_start();
-
-if (isset($_SESSION['username'])) {
-    header("Location: index.php");
-}
-
+include 'api/SessionHandler.php';
+error_reporting(1);
+$getsessioncookie = $_COOKIE['sess_id'];
+if (sess_verify($getsessioncookie) == 1) {
+    header("Location: panel.php");
+} else {
 if (isset($_POST['submit'])) {
-	$tc = hash('sha256', $_POST['tc']);
-	$username = $_POST['username'];
-	$email = $_POST['email'];
-	$password = md5($_POST['password']);
-	$cpassword = md5($_POST['cpassword']);
-
-	if ($password == $cpassword) {
-		$sql = "SELECT * FROM users WHERE email='$email'";
-		$result = mysqli_query($conn, $sql);
-		if (!$result->num_rows > 0) {
-			$sql = "INSERT INTO users (tc, username, email, password)
-					VALUES ('$tc', '$username', '$email', '$password')";
-			$result = mysqli_query($conn, $sql);
-			if ($result) {
-				function fileWriteAppend(){
-		            $current_data = file_get_contents('userdata.json');
-		            $array_data = json_decode($current_data, true);
-		            $extra = array(
-			            'id'               =>     $_POST['username'],
-                        'role'          =>     "Öğrenci",
-			            'rolecolor'          =>     "purple",
-			            'not'          =>     "0",
-                        'about'          =>     "",
-		        );
-		        $array_data[] = $extra;
-		        $final_data = json_encode($array_data);
-		        return $final_data;
-            }
-            if(file_exists('userdata.json'))
-            {
-                $final_data=fileWriteAppend();
-                if(file_put_contents('userdata.json', $final_data))
-            {
-                $message = "success";
-            }
-        }
-        echo "<script>alert('Kayıt İşlemi Başarılı.')</script>";
-		$tc = "";
-		$username = "";
-		$email = "";
-	    $_POST['password'] = "";
-		$_POST['cpassword'] = "";
-			} else {
-				echo "<script>alert('Bir hata oluştu.')</script>";
-			}
-		} else {
-			echo "<script>alert('Mail adresi zaten kullanılmakta.')</script>";
-		}
-		
-	} else {
-		echo "<script>alert('Şifreler eşleşmiyor.')</script>";
-	}
+$tc = hash('sha256', $_POST['tc']);
+$username = htmlentities($_POST['username']);
+$email = $_POST['email'];
+$password = md5($_POST['password']);
+  
+$query = $db->query("SELECT * FROM users WHERE email = '{$email}' OR username = '{$username}'",PDO::FETCH_ASSOC);
+$dataquery = $query->fetch(PDO::FETCH_ASSOC);
+$accountcount = $query -> rowCount();
+if( $accountcount < 0 || $accountcount == 0){
+if(filter_var($email, FILTER_VALIDATE_EMAIL)) {
+if(!$tc || !$username || !$email || !$password) {
+	echo "Lütfen tüm gerekli alanlar doldurun!";
+} else {
+$generate_new_unique_id = openssl_random_pseudo_bytes(30);
+$generate_new_unique_id = bin2hex($generate_new_unique_id);
+ 
+$save_user = $db->prepare("INSERT INTO users SET
+tc = ?,
+username = ?,
+email = ?,
+password = ?,
+status = ?,
+code = ?,
+about = ?,
+role = ?,
+rolecolor = ?,
+note = ?,
+avatar = ?,
+userid = ?,
+look_later = ?");
+$save_user_insert = $save_user->execute(array(
+     $tc, $username, $email, $password, "0", "0", "Ben NOMEE6 Eğitim kullanıyorum.", "Öğrenci", "purple", "9", " ", $generate_new_unique_id, ""
+));
+if($save_user_insert) {
+	echo "<script>alert('Kayıt işlemi başarılı!')</script>";
+} else {
+	echo "<script>alert('Bir veritabanı hatası meydana geldi.')</script>";
 }
+
+}
+} else {
+	echo "<script>alert('E-Posta adresi geçersiz.')</script>";
+}
+} else {
+	echo "<script>alert('E-Posta veya kullanıcı adı zaten kullanılmakta.')</script>";
+}}};
 
 ?>
 
@@ -71,28 +60,29 @@ if (isset($_POST['submit'])) {
 <html>
 <head>
 	<meta charset="utf-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+	<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+    <meta http-equiv="X-UA-Compatible" content="ie=edge"/>
+	<link href="./dist/css/tabler.min.css" rel="stylesheet"/>
+    <link href="./dist/css/tabler-flags.min.css" rel="stylesheet"/>
+    <link href="./dist/css/tabler-payments.min.css" rel="stylesheet"/>
+    <link href="./dist/css/tabler-vendors.min.css" rel="stylesheet"/>
+    <link href="./dist/css/demo.min.css" rel="stylesheet"/>
     <meta property="og:title" content="Nomee6 Eğitim" />
     <meta property="og:url" content="https://nomee6.xyz" />
     <meta property="og:image" content="https://nomee6.xyz/assets/A.png" />
-    <meta property="og:description" content="Daha iyi bir eğitim NOMEE6 Eğitim ile mümkün! Sadece 3 ders ile tüm nesili geleceğe çok iyi hazırlıyoruz." />
-	<link rel="stylesheet" type="text/css" href="style.css">
-	<?php 
-	$username = $_SESSION['username'];
+    <meta property="og:description" content="Daha iyi bir eğitim NOMEE6 Eğitim ile mmkn! Sadece 3 ders ile tüm nesili geleceğe çok iyi hazırlıyoruz." />
+	<?php
 	echo("
 	<!-- Matomo -->
 	  <script>
 		var _paq = window._paq = window._paq || [];
 		_paq.push(['trackPageView']);
 		_paq.push(['enableLinkTracking']);
-		_paq.push(['setUserId', '$username']);
 		_paq.push(['enableHeartBeatTimer']);
 		(function() {
 			var u=\"https://matomo.aliyasin.org/\";
 		  _paq.push(['setTrackerUrl', u+'matomo.php']);
-		  _paq.push(['setSiteId', '']);
+		  _paq.push(['setSiteId', '12']);
 		  var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
 		  g.async=true; g.src=u+'matomo.js'; s.parentNode.insertBefore(g,s);
 		})();
@@ -100,32 +90,67 @@ if (isset($_POST['submit'])) {
 	  <!-- End Matomo Code -->
 	");
 	?>
-	<title>Kayıt Ol</title>
+	<title>Kayıt Ol | NOMEE6 EĞİTİM</title>
 </head>
-<body>
-	<div class="container">
-		<form action="" method="POST" class="login-email">
-            <p class="login-text" style="font-size: 2rem; font-weight: 800;">Kayıt Ol</p>
-			<div class="input-group">
-				<input type="text" placeholder="TC Kimlik No" name="tc" maxlength="11" required>
-			</div>
-			<div class="input-group">
-				<input type="text" placeholder="Kullanıcı Adı" name="username" value="<?php echo $username; ?>" required>
-			</div>
-			<div class="input-group">
-				<input type="email" placeholder="Email" name="email" value="<?php echo $email; ?>" required>
-			</div>
-			<div class="input-group">
-				<input type="password" placeholder="Şifre" name="password" required>
+<body class="border-top-wide border-primary d-flex flex-column">
+      <div class="page page-center">
+      <div class="container-tight py-4">
+        <div class="text-center mb-4">
+          <a href="." class="navbar-brand navbar-brand-autodark"><img src="./static/logo.svg" height="36" alt=""></a>
+        </div>
+        <form class="card card-md" action="" method="POST">
+          <div class="card-body">
+            <h2 class="card-title text-center mb-4">Hesap Oluştur</h2>
+            <div class="mb-3">
+              <label class="form-label">TC Kimlik No</label>
+              <input type="text" name="tc" class="form-control" maxlength="11" placeholder="TC Kimlik Numaranızı girin" required>
             </div>
-            <div class="input-group">
-				<input type="password" placeholder="Tekrar Şifre" name="cpassword" required>
-			</div>
-			<div class="input-group">
-				<button name="submit" class="btn">Kayıt Ol</button>
-			</div>
-			<p class="login-register-text">Zaten bir hesabın var mı? <a href="index.php">Giriş Yap</a>.</p>
-		</form>
-	</div>
+            <div class="mb-3">
+              <label class="form-label">Kullanıcı Adı</label>
+              <input type="text" name="username" class="form-control" placeholder="Kullanıcı Adı girin" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">E-Posta adresi</label>
+              <input type="email" name="email" class="form-control" placeholder="E-Posta adresi girin" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Şifre</label>
+              <div class="input-group input-group-flat">
+                <input type="password" id="password" name="password" class="form-control" placeholder="Şifre" autocomplete="off" required>
+                <span class="input-group-text">
+                  <a id="togglePassword" class="link-secondary" title="Şifreyi Göster" data-bs-toggle="tooltip">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><circle cx="12" cy="12" r="2" /><path d="M22 12c-2.667 4.667 -6 7 -10 7s-7.333 -2.333 -10 -7c2.667 -4.667 6 -7 10 -7s7.333 2.333 10 7" /></svg>
+                  </a>
+                </span>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-check">
+                <input type="checkbox" class="form-check-input" required/>
+                <span class="form-check-label">Bu siteye kayıt olarak <a href="https://nomee6.xyz/privacy" tabindex="-1">NOMEE6 Gizlilik Politikasını</a> kabul ediyorum.</span>
+              </label>
+            </div>
+            <div class="form-footer">
+              <button type="submit" name="submit" class="btn btn-primary w-100">Hesap Oluştur</button>
+            </div>
+          </div>
+        </form>
+        <div class="text-center text-muted mt-3">
+          Zaten hesabın var mı? <a href="index.php" tabindex="-1">Giriş Yap</a>
+        </div>
+      </div>
+    </div>
+    <!-- Tabler Core -->
+    <script src="./dist/js/tabler.min.js"></script>
+    <script src="./dist/js/demo.min.js"></script>
+  	<script>
+        const togglePassword = document.querySelector("#togglePassword");
+        const password = document.querySelector("#password");
+
+        togglePassword.addEventListener("click", function () {
+            const type = password.getAttribute("type") === "password" ? "text" : "password";
+            password.setAttribute("type", type);
+        });
+    </script>
 </body>
 </html>
